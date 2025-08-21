@@ -39,22 +39,26 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
 
-  deploy:
+    deploy:
     needs: docker-build-push
     runs-on: ubuntu-latest
     steps:
       - name: Write SSH key file
+        id: write_key
+        shell: bash
         run: |
-          install -m 700 -d ~/.ssh
-          printf "%s" "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_deploy
-          chmod 600 ~/.ssh/id_deploy
+          KEY="$RUNNER_TEMP/id_deploy"
+          install -m 700 -d "$(dirname "$KEY")"
+          printf "%s" "${{ secrets.VPS_SSH_KEY }}" > "$KEY"
+          chmod 600 "$KEY"
+          echo "KEY_PATH=$KEY" >> "$GITHUB_OUTPUT"
 
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
-          key_path: ~/.ssh/id_deploy
+          key_path: ${{ steps.write_key.outputs.KEY_PATH }}
           script_stop: true
           script: |
             set -euo pipefail
