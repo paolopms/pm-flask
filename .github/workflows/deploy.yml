@@ -39,7 +39,7 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
 
-    deploy:
+  deploy:
     needs: docker-build-push
     runs-on: ubuntu-latest
     steps:
