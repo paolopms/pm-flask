@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Ventas</h3>
+<a class="btn btn-primary mb-3" href="/sales/pos">Nueva venta</a>
+<table class="table table-hover">
+  <thead><tr><th>ID</th><th>Fecha</th><th>Estado</th><th>Total</th><th></th></tr></thead>
+  <tbody>
+  {% for s in rows %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td>{{ s.date|es_date }}</td>
+      <td>{{ s.status }}</td>
+      <td>{{ s.total|clp }}</td>
+      <td><a class="btn btn-sm btn-outline-primary" href="/sales/pos?sale_id={{s.id}}">Abrir</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

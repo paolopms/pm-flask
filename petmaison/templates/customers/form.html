@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ 'Editar' if item else 'Nuevo' }} cliente</h3>
+<form method="post">
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Nombre</label>
+      <input class="form-control" name="name" value="{{ item.name if item else '' }}" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">RUT</label>
+      <input class="form-control" name="rut" value="{{ item.rut if item else '' }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Email</label>
+      <input class="form-control" name="email" type="email" value="{{ item.email if item else '' }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Teléfono</label>
+      <input class="form-control" name="phone" value="{{ item.phone if item else '' }}">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Dirección</label>
+      <input class="form-control" name="address" value="{{ item.address if item else '' }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Comuna</label>
+      <input class="form-control" name="comuna" value="{{ item.comuna if item else '' }}">
+    </div>
+  </div>
+  <div class="mt-3">
+    <button class="btn btn-primary">Guardar</button>
+    <a class="btn btn-secondary" href="/customers">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

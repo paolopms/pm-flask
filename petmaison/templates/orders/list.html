@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Pedidos</h3>
+<table class="table table-hover">
+  <thead><tr><th>ID</th><th>Cliente</th><th>Dirección</th><th>Estado</th><th>Venta</th><th></th></tr></thead>
+  <tbody>
+  {% for o in rows %}
+  <tr>
+    <td>{{ o.id }}</td>
+    <td>{{ o.customer_id }}</td>
+    <td>{{ o.address }}</td>
+    <td>
+      <form method="post" action="/orders/{{o.id}}/status" class="d-inline">
+        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+          {% for st in ['NEW','PREPARATION','OUT_FOR_DELIVERY','DELIVERED','CANCELLED'] %}
+            <option value="{{st}}" {% if o.status==st %}selected{% endif %}>{{st}}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </td>
+    <td>{{ o.sale_id or '' }}</td>
+    <td>
+      <form method="post" action="/orders/{{o.id}}/link_sale" class="d-inline">
+        <input class="form-control form-control-sm" name="sale_id" placeholder="ID Venta">
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Clientes</h3>
+<form class="row g-2 mb-3">
+  <div class="col-auto">
+    <input class="form-control" name="q" value="{{ q }}" placeholder="Buscar nombre">
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-secondary">Buscar</button>
+    <a class="btn btn-primary" href="/customers/create">Nuevo</a>
+  </div>
+</form>
+<table class="table table-hover">
+  <thead><tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Comuna</th><th>Saldo</th><th></th></tr></thead>
+  <tbody>
+  {% for c in rows %}
+  <tr>
+    <td>{{ c.name }}</td>
+    <td>{{ c.email or '' }}</td>
+    <td>{{ c.phone or '' }}</td>
+    <td>{{ c.comuna or '' }}</td>
+    <td>{{ c.balance|clp }}</td>
+    <td>
+      <a class="btn btn-sm btn-outline-primary" href="/customers/{{c.id}}/edit">Editar</a>
+      <form method="post" action="/customers/{{c.id}}/delete" style="display:inline" onsubmit="return confirm('¿Eliminar?')">
+        <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

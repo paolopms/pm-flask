@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ 'Editar' if item else 'Nuevo' }} producto</h3>
+<form method="post" enctype="multipart/form-data">
+  <div class="row g-3">
+    <div class="col-md-3">
+      <label class="form-label">SKU</label>
+      <input class="form-control" name="sku" value="{{ item.sku if item else '' }}" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Nombre</label>
+      <input class="form-control" name="name" value="{{ item.name if item else '' }}" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Marca</label>
+      <input class="form-control" name="brand" value="{{ item.brand if item else '' }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Categoría</label>
+      <input class="form-control" name="category" value="{{ item.category if item else '' }}">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Descripción</label>
+      <textarea class="form-control" name="description">{{ item.description if item else '' }}</textarea>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Costo Neto</label>
+      <input class="form-control" name="cost_net" type="number" step="0.01" value="{{ item.cost_net if item else '' }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Precio Bruto</label>
+      <input class="form-control" name="price_gross" type="number" step="0.01" value="{{ item.price_gross if item else '' }}">
+    </div>
+    <div class="col-md-3 form-check">
+      <input class="form-check-input" type="checkbox" name="vat_included" {% if item and item.vat_included %}checked{% endif %}>
+      <label class="form-check-label">IVA incluido</label>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Stock</label>
+      <input class="form-control" name="stock" type="number" value="{{ item.stock if item else 0 }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Stock mínimo</label>
+      <input class="form-control" name="min_stock" type="number" value="{{ item.min_stock if item else 0 }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Imagen</label>
+      <input class="form-control" name="image" type="file">
+    </div>
+  </div>
+  <div class="mt-3">
+    <button class="btn btn-primary">Guardar</button>
+    <a class="btn btn-secondary" href="/products">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Productos</h3>
+<form class="row g-2 mb-3">
+  <div class="col-auto">
+    <input class="form-control" name="q" value="{{ q }}" placeholder="Buscar nombre o SKU">
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-secondary">Buscar</button>
+    <a class="btn btn-primary" href="/products/create">Nuevo</a>
+  </div>
+</form>
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>SKU</th><th>Nombre</th><th>Stock</th><th>Precio</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for p in rows %}
+    <tr class="{% if p.stock <= p.min_stock %}table-warning{% endif %}">
+      <td>{{ p.sku }}</td>
+      <td>{{ p.name }}</td>
+      <td>{{ p.stock }}</td>
+      <td>{{ p.price_gross|clp }}</td>
+      <td>
+        <a class="btn btn-sm btn-outline-primary" href="/products/{{p.id}}/edit">Editar</a>
+        <form method="post" action="/products/{{p.id}}/delete" style="display:inline" onsubmit="return confirm('¿Eliminar?')">
+          <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

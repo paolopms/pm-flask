@@ -1,0 +1,42 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: petmaison
+      POSTGRES_PASSWORD: superseguro
+      POSTGRES_DB: petmaison
+      TZ: America/Santiago
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U petmaison']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - '5432:5432'
+
+  web:
+    build: .
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql+psycopg://petmaison:superseguro@db:5432/petmaison
+      - TIME_ZONE=America/Santiago
+      - SECRET_KEY=${SECRET_KEY:-change_me}
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '8000:8000'
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:8000/health || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:
+  media_data:

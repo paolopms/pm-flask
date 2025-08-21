@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Dashboard</h3>
+<div class="row g-3">
+  <div class="col-md-3">
+    <div class="card"><div class="card-body"><div>Ventas Hoy</div><div class="fs-4">{{ sales_today|clp }}</div></div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body"><div>Ventas Mes</div><div class="fs-4">{{ sales_month|clp }}</div></div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card"><div class="card-body"><div>Ticket Promedio</div><div class="fs-4">{{ ticket_prom|clp }}</div></div></div>
+  </div>
+</div>
+<h5 class="mt-4">Top 5 productos por unidades</h5>
+<table class="table table-sm">
+  <thead><tr><th>Producto</th><th>Unidades</th></tr></thead>
+  <tbody>
+    {% for name, u in top_units %}
+    <tr><td>{{ name }}</td><td>{{ u }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+<canvas id="chart1" height="100"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('chart1');
+  new Chart(ctx, {type:'bar', data:{labels:['Ene','Feb','Mar'], datasets:[{label:'Ventas', data:[1,2,3]}]}});
+</script>
+{% endblock %}

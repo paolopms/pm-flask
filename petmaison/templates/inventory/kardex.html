@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Kardex - {{ product.name if product else '' }}</h3>
+<table class="table table-sm">
+  <thead><tr><th>Fecha</th><th>Tipo</th><th>Ref</th><th>Cantidad</th><th>Costo Neto</th></tr></thead>
+  <tbody>
+    {% for m in rows %}
+    <tr>
+      <td>{{ m.created_at|es_date }}</td>
+      <td>{{ m.type }}</td>
+      <td>{{ m.ref_type }} #{{ m.ref_id or '' }}</td>
+      <td>{{ m.qty }}</td>
+      <td>{{ (m.unit_cost_net or 0)|clp }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
