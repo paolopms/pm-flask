@@ -2,7 +2,8 @@
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -55,7 +56,7 @@ jobs:
             ghcr.io/${{ github.repository }}:${{ github.sha }}
 
   deploy:
-    needs: [ docker-build-push ]
+    needs: docker-build-push
     runs-on: ubuntu-latest
     steps:
       - name: Write SSH key file
@@ -71,31 +72,29 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key_path: ~/.ssh/id_deploy
-          # Si no defines VPS_PORT en Secrets, el action usa 22 por defecto
-          port: ${{ secrets.VPS_PORT }}
+          # Omitimos 'port' para que use 22 por defecto; si tienes otro, crea el secret VPS_PORT y añade 'port: ${{ secrets.VPS_PORT }}'
           script_stop: true
           script: |
             set -euo pipefail
             cd "${{ secrets.APP_DIR }}"
 
-            # Asegura código al día (si el VPS tiene el repo clonado)
+            # (Si el repo está clonado en el VPS)
             if [ -d .git ]; then
               git fetch origin main || true
               git reset --hard origin/main || true
             fi
 
-            # Evita fallar si no hay imagen en el registry aún
+            # Evita romper si no hay imagen aún en el registry
             docker compose pull || true
 
             docker compose up -d db
 
-            # Migraciones y seed
             docker compose run --rm web flask db upgrade
             docker compose run --rm web flask seed || true
 
             docker compose up -d web
 
-            # Espera a que /health responda 200 (hasta 60s)
+            # Espera hasta 60s a que /health responda 200
             for i in {1..30}; do
               if curl -fsS http://localhost:8000/health >/dev/null; then
                 echo "Health OK"
