@@ -1,34 +1,109 @@
- name: Deploy over SSH
-  uses: appleboy/ssh-action@v1.2.0
-  with:
-    host: ${{ secrets.VPS_HOST }}
-    username: ${{ secrets.VPS_USER }}
-    key: ${{ secrets.VPS_SSH_KEY }}
-    port: ${{ secrets.VPS_PORT || '22' }}
-    script: |
-      set -e
-      cd ${{ secrets.APP_DIR }}
+ name: CI & Deploy
 
-      # Trae el último código por si el repo del VPS se quedó atrás
-      git fetch origin main || true
-      git reset --hard origin/main || true
+on:
+  push:
+    branches: [ "main" ]
 
-      # Si no existe la imagen en registry, no rompas el deploy
-      docker compose pull || true
+permissions:
+  contents: read
+  packages: write
 
-      docker compose up -d db
-      docker compose run --rm web flask db upgrade
-      docker compose run --rm web flask seed || true
-      docker compose up -d web
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # Espera hasta 60s a que /health responda 200
-      for i in {1..30}; do
-        if curl -fsS http://localhost:8000/health >/dev/null; then
-          exit 0
-        fi
-        sleep 2
-      done
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      echo "Smoke test falló"
-      exit 1
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install pytest
+          fi
 
+      - name: Run tests
+        run: pytest -q
+
+  docker-build-push:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+  deploy:
+    needs: [ docker-build-push ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write SSH key file
+        shell: bash
+        run: |
+          install -m 700 -d ~/.ssh
+          printf "%s" "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key_path: ~/.ssh/id_deploy
+          # Si no defines VPS_PORT en Secrets, el action usa 22 por defecto
+          port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.APP_DIR }}"
+
+            # Asegura código al día (si el VPS tiene el repo clonado)
+            if [ -d .git ]; then
+              git fetch origin main || true
+              git reset --hard origin/main || true
+            fi
+
+            # Evita fallar si no hay imagen en el registry aún
+            docker compose pull || true
+
+            docker compose up -d db
+
+            # Migraciones y seed
+            docker compose run --rm web flask db upgrade
+            docker compose run --rm web flask seed || true
+
+            docker compose up -d web
+
+            # Espera a que /health responda 200 (hasta 60s)
+            for i in {1..30}; do
+              if curl -fsS http://localhost:8000/health >/dev/null; then
+                echo "Health OK"
+                exit 0
+              fi
+              sleep 2
+            done
+
+            echo "Smoke test failed"
+            docker compose logs --no-color web | tail -n 200
+            exit 1
